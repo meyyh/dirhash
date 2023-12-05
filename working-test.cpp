@@ -75,3 +75,4 @@ int main(int argc, char *argv[]){
 
     
 }
+//g++ -I/usr/include/opencv4 -lopencv_core -lopencv_imgcodecs -lopencv_highgui -lopencv_imgproc test.cpp -o test
