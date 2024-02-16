@@ -2,7 +2,10 @@
 #include <string>
 #include <vector>
 #include <unistd.h>
-#include <opencv2/opencv.hpp>
+#include <thread>
+#include <chrono>
+#include <opencv4/opencv2/opencv.hpp>
+
 
 using namespace std;
 
@@ -19,7 +22,7 @@ void termsize(int& tHeight, int& tWidth) {
 
     stringstream ss(tsize);
 
-    ss >> tWidth >> tHeight;
+    ss >> tHeight >> tWidth;
 }
 
 void moveCursorToTopLeft() {
@@ -52,8 +55,15 @@ void displayAsciiArt(const cv::Mat& image) {
 int main(int argc, char *argv[]) {
     if (argc != 3) {
         cerr << "Usage: " << argv[0] << " <input_gif> <frame_delay>" << endl;
-        return 1; // Return an error code
+        return 1; 
     }
+    /*
+    FILE* pipe = popen("tar -xzf so.tar.gz", "r");
+    if (!pipe) {
+        std::cerr << "popen() failed!" << std::endl;
+        return -1;
+    }
+    pclose(pipe);*/
 
     cv::VideoCapture capture(argv[1]);
 
@@ -64,6 +74,9 @@ int main(int argc, char *argv[]) {
 
     int frameCount = static_cast<int>(capture.get(cv::CAP_PROP_FRAME_COUNT));
     double frameRate = capture.get(cv::CAP_PROP_FPS);
+    cout << "frame count" << frameCount << "\n";
+    cout << "frame rate" << frameRate << "\n";
+
 
     int frameDelay = stoi(argv[2]); // Delay between frames in milliseconds
 
@@ -79,13 +92,13 @@ int main(int argc, char *argv[]) {
         // Resize the frame to match the terminal height
         int tHeight, tWidth;
         termsize(tHeight, tWidth);
-        cv::resize(frame, frame, cv::Size(tWidth, tHeight / 4));
+        cv::resize(frame, frame, cv::Size(tWidth, tHeight));
 
         // Display the frame as ASCII art
         displayAsciiArt(frame);
 
         // Introduce a delay based on the specified frame delay
-        usleep(frameDelay * 1000); // usleep takes microseconds, so multiply by 1000 to convert milliseconds to microseconds
+        std::this_thread::sleep_for(std::chrono::milliseconds(frameDelay));
     }
 
     capture.release();
