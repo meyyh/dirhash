@@ -13,3 +13,6 @@ at some point I want to have multiple versions of the same language with all of 
 - works on windows and linux excluding platform specific "languages" like cmd and bash
 -upload best version to things like winget and aur
 -make documentaion on how some of this even works as i still dont fully understand it
+
+credit for most of ps1 script and idea
+https://github.com/jantari/poshpics
