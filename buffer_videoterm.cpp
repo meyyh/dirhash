@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <thread>
 #include <chrono>
+#include <sstream>
 #include <opencv4/opencv2/opencv.hpp>
 
 
@@ -25,18 +26,7 @@ void termsize(int& tHeight, int& tWidth) {
     ss >> tHeight >> tWidth;
 }
 
-void extract_frames(cv::VideoCapture capture, vector<cv::Mat>& frames)
-{	
-  	//cap.get(CV_CAP_PROP_FRAME_COUNT) contains the number of frames in the video;
-  	for(int frameNum = 0; frameNum < capture.get(cv::CAP_PROP_FRAME_COUNT);frameNum++)
-  	{
-  		cv::Mat frame;
-  		capture >> frame; // get the next frame from video
-  		frames.push_back(frame);
-  	}
-}
-
-void displayAsciiArt(const cv::Mat& image) {
+void displayAsciiArt(const cv::Mat& image, std::ostringstream& imagebuffer) {
     cout << "\033[H"; // ANSI escape code to move the cursor to the top-left corner
 
     for (int i = 0; i < image.rows; i++) {
@@ -51,11 +41,9 @@ void displayAsciiArt(const cv::Mat& image) {
 
             string backVT = "\033[48;2;" + to_string(back[2]) + ";" + to_string(back[1]) + ";" + to_string(back[0]) + "m";
 
-            string pixelOutput = backVT + foreVT + "\u2584\033[0m"; //aka "▄\033[0m"
-            cout << pixelOutput;
+            string pixelOutput = backVT + foreVT + "\u2584\033[0m";
+            imagebuffer << pixelOutput;
         }
-
-        cout << endl;
     }
 }
 
@@ -66,36 +54,45 @@ int main(int argc, char *argv[]) {
     }
 
     cv::VideoCapture capture(argv[1]);
-    int frameDelay = stoi(argv[2]); // Delay between frames in milliseconds
 
     if (!capture.isOpened()) {
         cerr << "Error opening video file." << endl;
         return 1;
     }
 
-    vector<cv::Mat> vecoframes;
-    extract_frames(capture, vecoframes);
+    int frameCount = static_cast<int>(capture.get(cv::CAP_PROP_FRAME_COUNT));
+    double frameRate = capture.get(cv::CAP_PROP_FPS);
 
-    //int frameCount = static_cast<int>(capture.get(cv::CAP_PROP_FRAME_COUNT));
-    //double frameRate = capture.get(cv::CAP_PROP_FPS);  
+    int frameDelay = stoi(argv[2]); // Delay between frames in milliseconds
 
-    while (true) {//loop video
-        for (const auto& frame : vecoframes) {
-            int tHeight, tWidth;
-            termsize(tHeight, tWidth);
-            cv::Mat resizedFrame;
-            cv::resize(frame, resizedFrame, cv::Size(tWidth, tHeight));
+    while (true) {
+        cv::Mat frame;
+        capture >> frame;
 
-            displayAsciiArt(resizedFrame);
-
-            // delay to change "speed" of the video
-            std::this_thread::sleep_for(std::chrono::milliseconds(frameDelay));
+        if (frame.empty()) {
+            capture.set(cv::CAP_PROP_POS_FRAMES, 0);
+            continue;
         }
+
+        // Resize the frame to match the terminal height
+        int tHeight, tWidth;
+        termsize(tHeight, tWidth);
+        cv::resize(frame, frame, cv::Size(tWidth, tHeight));
+
+        // Create an output string stream
+        std::ostringstream imagebuffer;
+
+        // Display the frame as ASCII art
+        displayAsciiArt(frame, imagebuffer);
+
+        printf("%s\n", imagebuffer.str().c_str());
+
+        // Introduce a delay based on the specified frame delay
+        std::this_thread::sleep_for(std::chrono::milliseconds(frameDelay));
     }
 
     capture.release();
 
     return 0;
 }
-
-//g++ -I/usr/include/opencv4 -lopencv_core -lopencv_imgcodecs -lopencv_highgui -lopencv_imgproc -lopencv_videoio -std=c++17 videoterm.cpp -o vidterm
+//g++ -I/usr/include/opencv4 -lopencv_core -lopencv_imgcodecs -lopencv_highgui -lopencv_imgproc -lopencv_videoio -std=c++17 buffer_videoterm.cpp -o bufvidterm
