@@ -1,0 +1,5 @@
+# # https://stackoverflow.com/questions/8865848/how-to-add-a-comment-in-a-gitignore-file
+# ignore all files without extentions
+*
+!/**/
+!*.*

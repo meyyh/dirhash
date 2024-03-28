@@ -41,7 +41,7 @@ void displayAsciiArt(const cv::Mat& image, std::ostringstream& imagebuffer) {
 
             string backVT = "\033[48;2;" + to_string(back[2]) + ";" + to_string(back[1]) + ";" + to_string(back[0]) + "m";
 
-            string pixelOutput = backVT + foreVT + "\u2584\033[0m";
+            string pixelOutput = backVT + foreVT + "\u2585\033[0m";//2584
             imagebuffer << pixelOutput;
         }
     }
