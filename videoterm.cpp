@@ -62,6 +62,7 @@ void displayAsciiArt(const cv::Mat& image) {
 int main(int argc, char *argv[]) {
     if (argc != 3) {
         cerr << "Usage: " << argv[0] << " <input_gif> <frame_delay>" << endl;
+        cerr << "if frame_delay is -1 use the videos origional fps" << endl;
         return 1; 
     }
 
@@ -76,8 +77,11 @@ int main(int argc, char *argv[]) {
     vector<cv::Mat> vecoframes;
     extract_frames(capture, vecoframes);
 
-    //int frameCount = static_cast<int>(capture.get(cv::CAP_PROP_FRAME_COUNT));
-    //double frameRate = capture.get(cv::CAP_PROP_FPS);  
+    int frameCount = static_cast<int>(capture.get(cv::CAP_PROP_FRAME_COUNT));
+    double frameRate = capture.get(cv::CAP_PROP_FPS);  
+
+    //std::cout << frameCount << "\n";
+    //std::cout << frameRate << "\n";
 
     while (true) {//loop video
         for (const auto& frame : vecoframes) {
@@ -88,8 +92,17 @@ int main(int argc, char *argv[]) {
 
             displayAsciiArt(resizedFrame);
 
-            // delay to change "speed" of the video
-            std::this_thread::sleep_for(std::chrono::milliseconds(frameDelay));
+            //if framedelay is -1 use the videos origional fps
+            //can cause video to be slow at higher term sizes
+            if(argv[2] == string("-1")){
+                std::cout << "argv2: " << argv[2] << endl;
+                // delay to change "speed" of the video
+                int delay = 1000 / frameRate;
+                std::this_thread::sleep_for(std::chrono::milliseconds(delay));
+            } else {
+                std::this_thread::sleep_for(std::chrono::milliseconds(frameDelay));
+                std::cout << "argv2: " << argv[2] << endl;
+            }
         }
     }
 
